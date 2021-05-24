@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const pool = require("./db");
 
 //middleware
 app.use(cors());
@@ -14,9 +13,7 @@ app.use(express.json()); //req.body
 app.post("/joblist", async (req, res) => {
   try {
     const { description } = req.body;
-    const newJob = await pool.query(
-      "INSERT INTO joblist (description) VALUES($1) RETURNING *",
-      [description]
+    const newJob = 
     );
 
     res.json(newJob.rows[0]);
