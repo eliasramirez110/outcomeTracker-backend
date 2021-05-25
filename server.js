@@ -32,6 +32,34 @@ const createJobs = async (req, res) => {
 }
 app.post("/jobs", createJobs)
 
+const getAllJobs = async (req, res) => {
+  try {
+    let jobs = await models.jobs.findAll()
+    res.json({jobs})
+  } catch (error) {
+    res.json({error})
+  }
+}
+
+const deleteJob = async(req, res) => {
+  try {
+    let deletedJob = await models.jobs.destroy({
+      where: {
+        id: req.params.id
+      }
+    })
+    res.json({deletedJob})
+  } catch (error) {
+    res.json({error})
+  }
+}
+
+app.delete('/jobs/:id', deleteJob)
+
+app.get('/jobs', getAllJobs)
+
 app.get('/', (req, res) => {
   res.send('')
 })
+
+
