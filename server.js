@@ -17,12 +17,15 @@ app.listen(PORT, () => {
 const models = require('./models')
 
 const createJobs = async (req, res) => {
+  console.log(req.body)
   try {
     let newJob = await models.jobs.create({
       jobtitle: req.body.jobtitle,
       jobdescription: req.body.description, 
       companyname: req.body.companyname,
-      salary: req.body.salary
+      salary: req.body.salary,
+      submitDate: req.body.submitDate,
+      contactInfo: req.body.contactInfo
     })
     res.json({newJob})
   } catch (error) {
@@ -30,7 +33,26 @@ const createJobs = async (req, res) => {
     res.json({error})
   }
 }
-app.post("/jobs", createJobs)
+
+const updateJob = async (req,res) => {
+  try {
+      
+      let updates = req.body
+      
+      let jobToUpdate = await models.jobs.findOne({
+          where:{
+              id: req.params.id
+          }
+      })
+      let final = await jobToUpdate.update(updates)
+      res.json({final})
+    
+    } catch (error) {
+      res.json({error})
+  }
+}
+
+
 
 const getAllJobs = async (req, res) => {
   try {
@@ -53,6 +75,10 @@ const deleteJob = async(req, res) => {
     res.json({error})
   }
 }
+
+app.put('/jobs/:id',updateJob)
+
+app.post("/jobs", createJobs)
 
 app.delete('/jobs/:id', deleteJob)
 
