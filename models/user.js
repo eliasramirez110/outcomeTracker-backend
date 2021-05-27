@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here 
       // users can have many jobs
+      models.user.hasMany(models.jobs)
     }
   };
   user.init({

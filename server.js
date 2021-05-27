@@ -2,11 +2,12 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const rowdy = require('rowdy-logger')
-const cors = require('cors')
+
 
 const routesReport = rowdy.begin(app)
 
-app.use(cors())
+app.use(require('morgan')('tiny'))
+app.use(require('cors')())
 app.use(express.json())
 
 app.listen(PORT, () => {
@@ -14,11 +15,59 @@ app.listen(PORT, () => {
   routesReport.print()
 })
 
-const models = require('./models')
+const models = require('./models');
+const user = require('./models/user');
+
+app.post('/users', (req, res) => {
+  models.user.create({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password
+  })
+  .then((user) => {
+    res.json({message: 'success', user})
+  })
+  .catch((error) => {
+    res.status(400).json({ error: error.messgae })
+  })
+})
+
+app.post('/users/login', (req, res) => {
+  models.user.findOne({
+    where: { email: req.body.email }
+  }).then((foundUser) => {
+    if (foundUser && foundUser.password === req.body.password) {
+      res.json({ messgae: 'success', user: foundUser })
+    } else {
+      res.status(401).json({ message: 'login failed' })
+    }
+  }).catch((error) => {
+    res.status(400).json({ error: error.messgae })
+  })
+})
+
+app.get('/users/verify', (req, res) => {
+  models.user.findOne({
+    where: { id: req.headers.authorization}
+  })
+  .then((user) => {
+    if (user) {
+      res.json({ user })
+    } else {
+      res.status(404).json({ message: 'user not found' })
+    }
+  })
+  .catch((error) => {
+    res.json({ error })
+  })
+})
 
 const createJobs = async (req, res) => {
   console.log(req.body)
   try {
+    let user = await models.user.findOne({
+      where: {id: req.headers.authorization}
+    })
     let newJob = await models.jobs.create({
       jobtitle: req.body.jobtitle,
       jobdescription: req.body.description, 
@@ -27,6 +76,7 @@ const createJobs = async (req, res) => {
       submitDate: req.body.submitDate,
       contactInfo: req.body.contactInfo
     })
+    await user.addJob(newJob)
     res.json({newJob})
   } catch (error) {
     console.log(error)
@@ -56,7 +106,11 @@ const updateJob = async (req,res) => {
 
 const getAllJobs = async (req, res) => {
   try {
-    let jobs = await models.jobs.findAll()
+    let user = await models.user.findOne({
+      where: {id: req.headers.authorization},
+    
+    })
+    let jobs = await user.getJobs()
     res.json({jobs})
   } catch (error) {
     res.json({error})
